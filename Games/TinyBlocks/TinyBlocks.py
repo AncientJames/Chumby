@@ -1,13 +1,22 @@
 '''
   Simple puzzle game for Thumby.
-  Adaption of code by Joachim Wiberg available at: https://github.com/troglobit
+  Adaption of code by Joachim Wiberg available at: https://github.com/troglobit 
 '''
 import thumby
 import time
+import uos
 import random
-from machine import freq
+import machine
+import thumbyGraphics as gfx
 
-freq(48_000_000)
+machine.freq(48000000)
+
+gfx.display.setResolution(72,40)
+SCREEN_W = gfx.display.width
+SCREEN_H = gfx.display.height
+
+C_BACKGROUND = gfx.colorRGB(0x60, 0x80, 0xa0)
+
 
 TinyBlocksSplash = bytearray([170,85,170,85,170,85,170,85,170,85,170,85,170,21,10,5,2,1,0,1,0,1,0,1,0,1,0,1,0,1,8,121,8,1,120,1,120,16,33,120,1,24,97,24,1,0,1,0,1,0,1,0,1,0,1,2,5,10,85,170,85,170,85,170,85,170,85,170,85,170,85,170,
            170,85,170,85,170,85,170,85,170,85,170,85,2,0,0,0,0,0,254,34,34,34,34,220,0,254,0,0,0,0,252,6,2,2,6,252,0,252,6,2,2,2,0,254,16,104,132,2,0,28,34,34,34,194,0,0,0,0,0,2,85,170,85,170,85,170,85,170,85,170,85,170,
@@ -17,6 +26,7 @@ TinyBlocksSplash = bytearray([170,85,170,85,170,85,170,85,170,85,170,85,170,21,1
 B_COLS =14
 B_ROWS =22
 B_SIZE =(B_ROWS * B_COLS)
+B_PIXELS = 2
 
 KEY_LEFT   =0
 KEY_RIGHT  =1
@@ -60,50 +70,69 @@ for i in range(B_SIZE):
   board.append(0)
 
 shapes = [
-  7,  TL,  TC,  MR,
-  8,  TR,  TC,  ML,
-  9,  ML,  MR,  BC,
-  3,  TL,  TC,  ML,
-  12,  ML,  BL,  MR,
-  15,  ML,  BR,  MR,
-  18,  ML,  MR,   2,           # sticks out
-  0,  TC,  ML,  BL,
-  1,  TC,  MR,  BR,
-  10,  TC,  MR,  BC,
-  11,  TC,  ML,  MR,
-  2,  TC,  ML,  BC,
-  13,  TC,  BC,  BR,
-  14,  TR,  ML,  MR,
-  4,  TL,  TC,  BC,
-  16,  TR,  TC,  BC,
-  17,  TL,  MR,  ML,
-  5,  TC,  BC,  BL,
-  6,  TC,  BC,  2 * B_COLS,   # sticks out
+  7 ,  TL,  TC,  MR, 2,
+  8 ,  TR,  TC,  ML, 3,
+  9 ,  ML,  MR,  BC, 1,
+  3 ,  TL,  TC,  ML, 4,
+  12,  ML,  BL,  MR, 5,
+  15,  ML,  BR,  MR, 6,
+  18,  ML,  MR,   2, 7,           # sticks out
+  0 ,  TC,  ML,  BL, 2,
+  1 ,  TC,  MR,  BR, 3,
+  10,  TC,  MR,  BC, 1,
+  11,  TC,  ML,  MR, 1,
+  2 ,  TC,  ML,  BC, 1,
+  13,  TC,  BC,  BR, 5,
+  14,  TR,  ML,  MR, 5,
+  4 ,  TL,  TC,  BC, 5,
+  16,  TR,  TC,  BC, 6,
+  17,  TL,  MR,  ML, 6,
+  5 ,  TC,  BC,  BL, 6,
+  6 ,  TC,  BC,  2 * B_COLS, 7  # sticks out 
 ]
 
-shapePos = random.randint(1, 10000000) % 7 * 4
-peek_shape = [shapes[shapePos],shapes[shapePos+1],shapes[shapePos+2],shapes[shapePos+3]]
-shape = [0,0,0,0]
-ghost_flicker = False
+colors = [
+  gfx.colorRGB(0x00,0x00,0x00),
+  gfx.colorRGB(0x40,0x00,0x80),
+  gfx.colorRGB(0x80,0x00,0x00),
+  gfx.colorRGB(0x00,0x80,0x00),
+  gfx.colorRGB(0x80,0x80,0x00),
+  gfx.colorRGB(0x80,0x40,0x00),
+  gfx.colorRGB(0x00,0x00,0x80),
+  gfx.colorRGB(0x00,0x80,0x80),
+  gfx.colorRGB(0x40,0x40,0x40),
+]
+
+shapePos = random.randint(1, 10000000) % 7 * 5
+peek_shape = [shapes[shapePos],shapes[shapePos+1],shapes[shapePos+2],shapes[shapePos+3],shapes[shapePos+4]]
+shape = [0,0,0,0,0]
 
 def clearScreen():
-
+  '''
   thumby.display.drawFilledRectangle(34,2,36,12-1 ,0)
   thumby.display.drawFilledRectangle(39-5,18,14,12-1,0)
   thumby.display.drawFilledRectangle(52,18,18,12-1,0)
-
+  
   thumby.display.drawRectangle(34-1,2-1,36+2,12+2-1,1)
   thumby.display.drawRectangle(39-1-5,18-1,14+2,12+2-1,1)
   thumby.display.drawRectangle(52-1,18-1,18+2,12+2-1,1)
+  '''
 
 def setBlock(xb, yb, val):
-  thumby.display.drawFilledRectangle(xb*2, yb*2, 2, 2, 1 if val else 0)
+  if 0<=val<=len(colors):
+    c = colors[val]
+  else:
+    c = gfx.C_WHITE
+  thumby.display.drawFilledRectangle(xb*B_PIXELS, yb*B_PIXELS, B_PIXELS, B_PIXELS, c)
+  thumby.display.setPixel(xb*B_PIXELS, yb*B_PIXELS, c | (c>>1))
 
-def setGhostBlock(xb, yb):
-  thumby.display.setPixel(xb*2 + int(ghost_flicker), yb*2, 1)
-  thumby.display.setPixel(xb*2 + 1 - int(ghost_flicker), yb*2+1, 1)
+def setGhostBlock(idx, color):
+  if board[idx] == 0:
+    x = (idx % B_COLS) + 2
+    y = (idx // B_COLS) - 1
+    thumby.display.drawFilledRectangle(x*B_PIXELS, y*B_PIXELS, B_PIXELS, B_PIXELS, color)
 
-def updateScreen(showGhost = False, ghostPos = None):
+def updateScreen(ghostPos = None, ghostColor = None):
   #print("update")
   global level
   clearScreen()
@@ -113,10 +142,10 @@ def updateScreen(showGhost = False, ghostPos = None):
     preview.append(0)
   # thumby.display piece preview
   #memset (preview, 0, sizeof(preview));
-  preview[2 * B_COLS + 1] = 7
-  preview[2 * B_COLS + 1 + peek_shape[1]] = 7
-  preview[2 * B_COLS + 1 + peek_shape[2]] = 7
-  preview[2 * B_COLS + 1 + peek_shape[3]] = 7
+  preview[B_PIXELS * B_COLS + 1] = 7
+  preview[B_PIXELS * B_COLS + 1 + peek_shape[1]] = 7
+  preview[B_PIXELS * B_COLS + 1 + peek_shape[2]] = 7
+  preview[B_PIXELS * B_COLS + 1 + peek_shape[3]] = 7
 
   for y in range(4):
     for x in range(4):
@@ -127,21 +156,16 @@ def updateScreen(showGhost = False, ghostPos = None):
     for x in range(B_COLS):
       setBlock(x + 2, y-1, board[y * B_COLS + x])
 
-  if showGhost:
-      x = ghostPos % B_COLS
-      y = ghostPos // B_COLS
-      setGhostBlock(x + 2, y-1)
-      for i in shape[1:]:
-          p = i + ghostPos
-          x = p % B_COLS
-          y = p // B_COLS
-          setGhostBlock(x + 2, y-1)
+  if ghostPos != None:
+      setGhostBlock(ghostPos, ghostColor)
+      for i in range(3):
+          setGhostBlock(ghostPos+shape[i+1], ghostColor)
 
   # Update points and level*/
   #while (lines_cleared >= 10):
     #lines_cleared -= 10
     #level+=1
-
+  
   thumby.display.drawText('%05d' % (points), 36+2, 4,1)
   thumby.display.drawText('%02d' % lines_cleared, 36+18+2, 20,1)
   # level
@@ -169,20 +193,21 @@ def next_shape():
   print("next")
   global peek_shape
   next = peek_shape
-  shapePos = random.randint(1, 10000000) % 7 * 4
-  peek_shape = [shapes[shapePos],shapes[shapePos+1],shapes[shapePos+2],shapes[shapePos+3]]
+  shapePos = random.randint(1, 10000000) % 7 * 5
+  peek_shape = [shapes[shapePos],shapes[shapePos+1],shapes[shapePos+2],shapes[shapePos+3],shapes[shapePos+4]]
   if (next==0):
     return next_shape()
+  
   return next;
 
 def show_high_score():
-
+    
   for y in range(40):
     thumby.display.drawFilledRectangle(8,40-y,20,1,1)
     time.sleep_ms(15)
     thumby.display.update()
     thumby.audio.play(100+(40-y)*20, 50)
-
+  
   for i in range(41):
     thumby.display.drawFilledRectangle(8,0,20,i,0)
     thumby.display.drawText("G", 11, -2+5+0,1)
@@ -195,7 +220,7 @@ def show_high_score():
     thumby.display.drawText("R", 20, 2+5+24,1)
     time.sleep_ms(10)
     thumby.display.update()
-
+  
   lastUpdate=time.ticks_ms()
   while(getcharinputNew()==' '):
     color = 1
@@ -228,8 +253,9 @@ while(True):
   pos = 17+3
   backup = []
   movingLeftOrRight = 0
-
+  
   thumby.display.fill(0)
+  thumby.display.fg = gfx.colorRGB(0xa0, 0x60, 0xa0)
   thumby.display.blit(TinyBlocksSplash, 0,0, 72, 40,0,0,0)
   #thumby.display.update()
   #while(1):
@@ -237,7 +263,7 @@ while(True):
   #thumby.display.fillRect(10,24,72-20,16,0)
   isdisplayed=0;
   thumby.display.update()
-
+  
   while(getcharinputNew()==' '):
     if((time.ticks_ms()//1000)&1):
       if isdisplayed == 0 :
@@ -255,7 +281,7 @@ while(True):
   # Initialize board
   for i in range(B_SIZE-1):
     if (i < B_COLS*1 or (i % B_COLS) <= 1 or (i % B_COLS) >= (B_COLS-2)):
-      board[(B_SIZE-1)-i] = 7
+      board[(B_SIZE-1)-i] = 8
     else:
       board[(B_SIZE-1)-i] = 0
 
@@ -265,14 +291,15 @@ while(True):
   print("startloop")
   lastUpdate=time.ticks_ms()
   lastDrop=time.ticks_ms()
-
-  thumby.display.fill(0)
+  
+  thumby.display.fill(C_BACKGROUND)
+  '''
   for x in range(72/2):
     for y in range(5):
       thumby.display.blit(bytearray([0x55,0xAA]), x*2, y*8, 2, 8,0,0,0)
+  '''
 
   while (1):
-    ghost_flicker = not ghost_flicker
     c=getcharinputNew()
     if(c==' '):
         if(time.ticks_ms()-lastUpdate > 50):
@@ -292,7 +319,7 @@ while(True):
                 c = 'R'
     else:
         lastUpdate=time.ticks_ms()
-
+    
     #continue
     if (c == keys[KEY_DROP]):
       #print(B_COLS,pos, pos//B_COLS)
@@ -301,7 +328,7 @@ while(True):
         c=' '
         thumby.audio.play(300, 10)
       else:
-        place (shape, pos, 7)
+        place (shape, pos, shape[4])
         #points+=1;
         j=0
         currentLines=lines_cleared
@@ -341,15 +368,15 @@ while(True):
         pos+=1
     if (c == keys[KEY_ROT_L]):
       backup = shape
-      shape = shapes[4*shape[0]:4*shape[0]+4]
-      # Check if it fits, if not restore shape from backup
+      shape = shapes[5*shape[0]:5*shape[0]+5]
+      # Check if it fits, if not restore shape from backup 
       if (fits_in (shape, pos)==0):
         shape = backup
     if (c == keys[KEY_ROT_R]):
       backup = shape
-      shape = shapes[4*shape[0]:4*shape[0]+4]
-      shape = shapes[4*shape[0]:4*shape[0]+4]
-      shape = shapes[4*shape[0]:4*shape[0]+4]
+      shape = shapes[5*shape[0]:5*shape[0]+5]
+      shape = shapes[5*shape[0]:5*shape[0]+5]
+      shape = shapes[5*shape[0]:5*shape[0]+5]
       # Check if it fits, if not restore shape from backup
       if (fits_in (shape, pos)==0):
         shape = backup
@@ -369,8 +396,8 @@ while(True):
         ghost += B_COLS
     ghost -= B_COLS
 
-    place (shape, pos, 7);
-    updateScreen (showGhost = True, ghostPos = ghost);
+    place (shape, pos, shape[4]);
+    updateScreen (ghostPos = ghost, ghostColor = colors[shape[4]]>>1);
     place (shape, pos, 0);
-
+    
   a=0

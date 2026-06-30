@@ -21,16 +21,21 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 '''
 
-import thumby
 import time
+import uos
 import random
 import gc
+import utime
 import math
-from machine import freq
+import thumby
+import machine
 
-freq(125_000_000)
+machine.freq(125000000)
 
 gc.enable() # This line helps make sure we don't run out of memory
+
+from framebuf import FrameBuffer, MONO_VLSB # Graphics stuff
+import thumbyGraphics as gfx
 
 splash = (0,0,0,224,248,76,198,196,108,56,0,0,0,192,248,124,102,102,38,4,0,0,128,60,102,66,198,140,8,0,0,0,192,248,62,2,6,4,156,240,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
            0,0,131,131,0,0,1,3,2,0,2,0,3,3,0,0,0,0,0,130,0,0,1,131,2,2,2,3,0,2,0,0,3,130,130,130,3,1,1,0,2,0,128,0,0,0,0,0,0,0,0,128,128,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -126,14 +131,26 @@ class ShipBullet:
         self.YVel = _yv
         self.Life = 240
 
+# Very fast pseudorandom function
+
+@micropython.viper
+def qrandom(qrseed: int) -> int:
+    #qrseed ^= (qrseed << 10)
+    # qrseed ^= (qrseed >> 17)
+    #qrseed ^= (qrseed << 2)
+    return qrseed
+
 @micropython.viper
 def DrawStars():
     yp:int = int(round(YPos)) | 0x1
     xp:int = int(round(XPos)) | 0x1
-    ptr = ptr8(thumby.display.display.buffer)
+    ptr = ptr16(thumby.display.display.buffer)
     y:int = 0
     seed:int = 0
     yOffset:int = 0
+    stride = int(thumby.display.width)
+    star1:int = 0b_11101111_00111001
+    star2:int = 0b_11111111_01111011
     while(y < int(40)):
         x:int = 0
         while(x < int(72)):
@@ -141,15 +158,15 @@ def DrawStars():
             seed ^= (seed << 10)
             seed ^= (seed << 2)
             if(seed & 0xFFFFFF < 192000//3):
-                ptr[(y >> 3) * int(72) + x] |= 1 << (y & 0x07)
-                #display.pixel(x, y, 1)
+                ptr[y * stride + x] = ((seed >> 23) & 0b1110111101111011) | 0b1110011100111001 #0b0000100001000010
+                #.display.setPixel(x, y, 1)
                 #pass
             seed = (int(((xp+x//2)*(yp+y//2))) << 10)
             seed ^= (seed << 10)
             seed ^= (seed << 2)
             if(seed & 0xFFFFFF < 192000//2):
-                ptr[(y >> 3) * int(72) + x] |= 1 << (y & 0x07)
-                #display.pixel(x, y, 1)
+                ptr[y * stride + x] |= ((seed >> 23) & 0b1110111101111011) | 0b1110011100111001 #0b0000100001000010
+                #thumby.display.setPixel(x, y, 1)
                 #pass
             x += 2
         #print(y)
@@ -161,13 +178,14 @@ for i in range(0, 5):
     asteroids.append(Asteroid())
 
 bullets = []
+bullet_color = gfx.colorRGB(0xff, 0xa0, 0x00)
 
 thumby.saveData.setName("SpaceDebris")
 
 def UpdateBullets():
     # Bullet dynamics and drawing
     for bullet in bullets:
-        thumby.display.drawFilledRectangle(round(bullet.XPos-XPos+72*0.5), round(bullet.YPos-YPos+40*0.5), 2, 2, 1)
+        thumby.display.drawFilledRectangle(round(bullet.XPos-XPos+72*0.5), round(bullet.YPos-YPos+40*0.5), 2, 2, bullet_color)
         bullet.XPos += bullet.XVel
         bullet.YPos += bullet.YVel
         for asteroid in asteroids:
@@ -254,7 +272,7 @@ while(thumby.buttonA.pressed() == True or thumby.buttonB.pressed() == True):
 startTime = time.ticks_ms()
 
 while(GameRunning == True):
-    t0 = time.ticks_us()
+    t0 = utime.ticks_us()
     thumby.audio.stop()
     # Figure out the direction of the D-pad
     if(thumby.buttonR.pressed() == True):
@@ -445,7 +463,7 @@ while(GameRunning == True):
     thumby.display.update()
     if(len(asteroids) == 0):
         GameRunning = False
-    while(time.ticks_us() - t0 < 1000000 / MaxFps):
+    while(utime.ticks_us() - t0 < 1000000 / MaxFps):
         pass
 
 endTime = time.ticks_ms()
@@ -473,4 +491,5 @@ thumby.display.update()
 
 time.sleep_ms(3000)
 
-thumby.reset() # Exit game to main menu
+machine.reset()
+

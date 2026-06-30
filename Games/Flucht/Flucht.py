@@ -2,6 +2,7 @@ import time
 import thumby
 from machine import ADC
 import sys
+import thumbyGraphics as gfx
 
 CURRENT_FOLDER = '/Games/Flucht'
 sys.path.insert(1, CURRENT_FOLDER)
@@ -16,8 +17,8 @@ import common_code
 
 CONFIG_FILE_PATH = CURRENT_FOLDER + '/config.cfg'
 
-SCREEN_WIDTH = 40
-SCREEN_HEIGHT = 72
+SCREEN_WIDTH = gfx.display.height
+SCREEN_HEIGHT = gfx.display.width
 
 class game_interface:
 	sprites = dict()
@@ -101,6 +102,7 @@ class game_interface:
 		w = 8
 		h = 5
 		bw = { 0:6, 1:4, 2:2, 3:0 }
+		c = [gfx.C_RED, gfx.C_RED, gfx.C_YELLOW, gfx.C_GREEN]
 		
 		# [0..3]
 		battery_level = 3
@@ -116,8 +118,8 @@ class game_interface:
 			battery_level = 0
 		
 		self.drawFilledRectangle(x-2,y-1,w+3,h+2,0)
-		self.drawFilledRectangle(x, y, w, h, 1)
-		self.drawRectangle(x-1, y+1, 1, h-2, 1)
+		self.drawFilledRectangle(x, y, w, h, c[battery_level])
+		self.drawRectangle(x-1, y+1, 1, h-2, c[battery_level])
 		
 		if battery_level < 3:
 			self.drawFilledRectangle(x+1,y+1,bw[battery_level],h-2,0)

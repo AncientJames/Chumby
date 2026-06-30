@@ -6,6 +6,14 @@ import random
 Number = int
 from thumbyAudio import audio
 from thumbySaves import saveData
+import thumbyGraphics as gfx
+
+display.setResolution(72, -1)
+screen_w = display.width
+screen_h = display.height
+
+col_roadside = gfx.colorRGB(0x00, 0xA0, 0x00)
+col_markings = gfx.colorRGB(0xA0, 0xA0, 0xA0)
 
 car_1_x = None
 car_1_y = None
@@ -69,6 +77,7 @@ def spawn_car_1():
   car_1_y = -48
   car_1.x = car_1_x
   car_1.y = car_1_y
+  car_1.color = gfx.colorHSV(random.randint(0,255), 128, 200)
 
 # Describe this function...
 def main_game_loop():
@@ -155,6 +164,7 @@ def spawn_car_2():
   car_2_y = -80
   car_2.x = car_2_x
   car_2.y = car_2_y
+  car_2.color = gfx.colorHSV(random.randint(0,255), 128, 200)
 
 # Describe this function...
 def respawn_car_1():
@@ -163,6 +173,7 @@ def respawn_car_1():
   car_1_y = -48
   car_1.x = car_1_x
   car_1.y = car_1_y
+  car_1.color = gfx.colorHSV(random.randint(0,255), 200, 200)
 
 # Describe this function...
 def respawn_car_2():
@@ -171,6 +182,7 @@ def respawn_car_2():
   car_2_y = -80
   car_2.x = car_2_x
   car_2.y = car_2_y
+  car_2.color = gfx.colorHSV(random.randint(0,255), 100, 200)
 
 # Describe this function...
 def spawn_truck():
@@ -190,6 +202,7 @@ def spawn_truck():
     truck_y = -32
     truck.x = truck_x
     truck.y = truck_y
+  truck.color = gfx.colorHSV(random.randint(0,255), 50, 200)
 
 # Describe this function...
 def respawn_truck():
@@ -211,39 +224,41 @@ def respawn_truck():
     truck_y = -32
     truck.x = truck_x
     truck.y = truck_y
+  truck.color = gfx.colorHSV(random.randint(0,255), 50, 200)
+
 
 # Describe this function...
 def roads():
   global car_1_x, car_1_y, car_2_x, car_2_y, player_car_mask, player_car, Main_menu, truck_x, score, road_lines_y, car_1, car_2, odd_or_even, truck_y, player_car_x, truck
-  if road_lines_y > 40:
-    road_lines_y = -40
+  if road_lines_y > screen_h:
+    road_lines_y = -screen_h
   road_lines_y = (road_lines_y if isinstance(road_lines_y, Number) else 0) + 4
   left_road_lines()
   right_road_lines()
-  display.drawLine(12, 0, 12, 40, 1)
-  display.drawLine(60, 0, 60, 40, 1)
+  display.drawLine(12, 0, 12, screen_h, col_roadside)
+  display.drawLine(60, 0, 60, screen_h, col_roadside)
 
 # Describe this function...
 def left_road_lines():
   global car_1_x, car_1_y, car_2_x, car_2_y, player_car_mask, player_car, Main_menu, truck_x, score, road_lines_y, car_1, car_2, odd_or_even, truck_y, player_car_x, truck
-  display.drawRectangle(28, road_lines_y + -40, 1, 5, 1)
-  display.drawRectangle(28, road_lines_y + -20, 1, 5, 1)
-  display.drawRectangle(28, road_lines_y + 0, 1, 5, 1)
-  display.drawRectangle(28, road_lines_y + 20, 1, 5, 1)
-  display.drawRectangle(28, road_lines_y + 40, 1, 5, 1)
-  display.drawRectangle(28, road_lines_y + 60, 1, 5, 1)
-  display.drawRectangle(28, road_lines_y + 80, 1, 5, 1)
+  display.drawRectangle(28, road_lines_y + -40, 1, 5, col_markings)
+  display.drawRectangle(28, road_lines_y + -20, 1, 5, col_markings)
+  display.drawRectangle(28, road_lines_y + 0, 1, 5, col_markings)
+  display.drawRectangle(28, road_lines_y + 20, 1, 5, col_markings)
+  display.drawRectangle(28, road_lines_y + 40, 1, 5, col_markings)
+  display.drawRectangle(28, road_lines_y + 60, 1, 5, col_markings)
+  display.drawRectangle(28, road_lines_y + 80, 1, 5, col_markings)
 
 # Describe this function...
 def right_road_lines():
   global car_1_x, car_1_y, car_2_x, car_2_y, player_car_mask, player_car, Main_menu, truck_x, score, road_lines_y, car_1, car_2, odd_or_even, truck_y, player_car_x, truck
-  display.drawRectangle(44, road_lines_y + -40, 1, 5, 1)
-  display.drawRectangle(44, road_lines_y + -20, 1, 5, 1)
-  display.drawRectangle(44, road_lines_y + 0, 1, 5, 1)
-  display.drawRectangle(44, road_lines_y + 20, 1, 5, 1)
-  display.drawRectangle(44, road_lines_y + 40, 1, 5, 1)
-  display.drawRectangle(44, road_lines_y + 60, 1, 5, 1)
-  display.drawRectangle(44, road_lines_y + 80, 1, 5, 1)
+  display.drawRectangle(44, road_lines_y + -40, 1, 5, col_markings)
+  display.drawRectangle(44, road_lines_y + -20, 1, 5, col_markings)
+  display.drawRectangle(44, road_lines_y + 0, 1, 5, col_markings)
+  display.drawRectangle(44, road_lines_y + 20, 1, 5, col_markings)
+  display.drawRectangle(44, road_lines_y + 40, 1, 5, col_markings)
+  display.drawRectangle(44, road_lines_y + 60, 1, 5, col_markings)
+  display.drawRectangle(44, road_lines_y + 80, 1, 5, col_markings)
 
 # Describe this function...
 def draw_car_2():

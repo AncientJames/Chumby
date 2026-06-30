@@ -1,6 +1,7 @@
 import math
 import random
-
+import thumbyGraphics as gfx
+ 
 ############# UTILS #############
 
 def clamp(num, min_value, max_value):
@@ -11,8 +12,9 @@ def lerp(ratio, min_value, max_value):
 
 # CONSTANTS
 
-SCREEN_WIDTH = 40
-SCREEN_HEIGHT = 72
+gfx.display.setResolution(96, 46)
+SCREEN_WIDTH = gfx.display.height
+SCREEN_HEIGHT = gfx.display.width
 
 WALL_WIDTH = 3
 
@@ -52,10 +54,14 @@ TIME_TO_IGNORE_INPUT_AFTER_GAMEOVER = 1.0
 
 sprite_sizes = dict()
 
+floor_color = gfx.colorRGB(0x50, 0xa0, 0x50)
+player_color = gfx.colorRGB(0xff, 0xff, 0x00)
+
+
 def generate_sprites(game_interface):
 	global sprite_sizes
 	
-	def generate_sprite(name, anchor_x, anchor_y, sprite, key=-1):
+	def generate_sprite(name, anchor_x, anchor_y, color, sprite, key=-1):
 		global sprite_sizes
 	
 		TRANSPOSE = True
@@ -95,12 +101,13 @@ def generate_sprites(game_interface):
 				data.append(byte)
 
 		game_interface.init_sprite(name, SPRITE_WIDTH, SPRITE_HEIGHT, bytearray(data), anchor_x, anchor_y, key)
+		game_interface.sprites[name].color = gfx.colorRGB((color&0xff0000) >> 16, (color&0x00ff00) >> 8, (color&0x0000ff))
 		
-	def generate_sprite_mirrored(name, anchor_x, anchor_y, sprite, key=-1):
-		generate_sprite(name + '_LEFT',  anchor_x, anchor_y, sprite,                                  key)
-		generate_sprite(name + '_RIGHT', anchor_x, anchor_y, [list(reversed(row)) for row in sprite], key)
+	def generate_sprite_mirrored(name, anchor_x, anchor_y, color, sprite, key=-1):
+		generate_sprite(name + '_LEFT',  anchor_x, anchor_y, color, sprite,                                  key)
+		generate_sprite(name + '_RIGHT', anchor_x, anchor_y, color, [list(reversed(row)) for row in sprite], key)
 		
-	generate_sprite('SPRITE_TITLE', 0, 56, [
+	generate_sprite('SPRITE_TITLE', 0, 56, 0x80ffff, [
 		'                                        ',
 		'                                        ',
 		'                                        ',
@@ -119,7 +126,7 @@ def generate_sprites(game_interface):
 		'                                        ',
 	])
 	
-	generate_sprite('SPRITE_SCORE', 0, 58, [
+	generate_sprite('SPRITE_SCORE', 0, 58, 0x80ffff, [
 		'                                        ',
 		'                                        ',
 		'                                        ',
@@ -136,7 +143,7 @@ def generate_sprites(game_interface):
 		'                                        ',
 	])
 	
-	generate_sprite('SPRITE_BEST', 6, 28, [
+	generate_sprite('SPRITE_BEST', 6, 28, 0x80ffff, [
 		'                            ',
 		'                            ',
 		'  xxxx               x      ',
@@ -149,7 +156,7 @@ def generate_sprites(game_interface):
 		'                            ',
 	])
 	
-	generate_sprite('SPRITE_DIGIT_0', 0, 0, [
+	generate_sprite('SPRITE_DIGIT_0', 0, 0, 0xffffff, [
 		'xxxxx',
 		'xxxxx',
 		'xx xx',
@@ -159,7 +166,7 @@ def generate_sprites(game_interface):
 		'xxxxx',
 		'xxxxx',
 	])
-	generate_sprite('SPRITE_DIGIT_1', 0, 0, [
+	generate_sprite('SPRITE_DIGIT_1', 0, 0, 0xffffff, [
 		'  xx ',
 		'  xx ',
 		'  xx ',
@@ -169,7 +176,7 @@ def generate_sprites(game_interface):
 		'  xx ',
 		'  xx ',
 	])
-	generate_sprite('SPRITE_DIGIT_2', 0, 0, [
+	generate_sprite('SPRITE_DIGIT_2', 0, 0, 0xffffff, [
 		'xxxxx',
 		'xxxxx',
 		'   xx',
@@ -179,7 +186,7 @@ def generate_sprites(game_interface):
 		'xxxxx',
 		'xxxxx',
 	])
-	generate_sprite('SPRITE_DIGIT_3', 0, 0, [
+	generate_sprite('SPRITE_DIGIT_3', 0, 0, 0xffffff, [
 		'xxxxx',
 		'xxxxx',
 		'   xx',
@@ -189,7 +196,7 @@ def generate_sprites(game_interface):
 		'xxxxx',
 		'xxxxx',
 	])
-	generate_sprite('SPRITE_DIGIT_4', 0, 0, [
+	generate_sprite('SPRITE_DIGIT_4', 0, 0, 0xffffff, [
 		'xx xx',
 		'xx xx',
 		'xx xx',
@@ -199,7 +206,7 @@ def generate_sprites(game_interface):
 		'   xx',
 		'   xx',
 	])
-	generate_sprite('SPRITE_DIGIT_5', 0, 0, [
+	generate_sprite('SPRITE_DIGIT_5', 0, 0, 0xffffff, [
 		'xxxxx',
 		'xxxxx',
 		'xx   ',
@@ -209,7 +216,7 @@ def generate_sprites(game_interface):
 		'xxxxx',
 		'xxxxx',
 	])
-	generate_sprite('SPRITE_DIGIT_6', 0, 0, [
+	generate_sprite('SPRITE_DIGIT_6', 0, 0, 0xffffff, [
 		'xxxxx',
 		'xxxxx',
 		'xx   ',
@@ -219,7 +226,7 @@ def generate_sprites(game_interface):
 		'xxxxx',
 		'xxxxx',
 	])
-	generate_sprite('SPRITE_DIGIT_7', 0, 0, [
+	generate_sprite('SPRITE_DIGIT_7', 0, 0, 0xffffff, [
 		'xxxxx',
 		'xxxxx',
 		'   xx',
@@ -229,7 +236,7 @@ def generate_sprites(game_interface):
 		'   xx',
 		'   xx',
 	])
-	generate_sprite('SPRITE_DIGIT_8', 0, 0, [
+	generate_sprite('SPRITE_DIGIT_8', 0, 0, 0xffffff, [
 		'xxxxx',
 		'xxxxx',
 		'xx xx',
@@ -239,7 +246,7 @@ def generate_sprites(game_interface):
 		'xxxxx',
 		'xxxxx',
 	])
-	generate_sprite('SPRITE_DIGIT_9', 0, 0, [
+	generate_sprite('SPRITE_DIGIT_9', 0, 0, 0xffffff, [
 		'xxxxx',
 		'xxxxx',
 		'xx xx',
@@ -250,70 +257,70 @@ def generate_sprites(game_interface):
 		'xxxxx',
 	])
 	
-	generate_sprite('SPRITE_DIGIT_SMALL_0', 0, 0, [
+	generate_sprite('SPRITE_DIGIT_SMALL_0', 0, 0, 0xaaaaaa, [
 		'xxx',
 		'x x',
 		'x x',
 		'x x',
 		'xxx',
 	])
-	generate_sprite('SPRITE_DIGIT_SMALL_1', 0, 0, [
+	generate_sprite('SPRITE_DIGIT_SMALL_1', 0, 0, 0xaaaaaa, [
 		' x ',
 		' x ',
 		' x ',
 		' x ',
 		' x ',
 	])
-	generate_sprite('SPRITE_DIGIT_SMALL_2', 0, 0, [
+	generate_sprite('SPRITE_DIGIT_SMALL_2', 0, 0, 0xaaaaaa, [
 		'xxx',
 		'  x',
 		'xxx',
 		'x  ',
 		'xxx',
 	])
-	generate_sprite('SPRITE_DIGIT_SMALL_3', 0, 0, [
+	generate_sprite('SPRITE_DIGIT_SMALL_3', 0, 0, 0xaaaaaa, [
 		'xxx',
 		'  x',
 		'xxx',
 		'  x',
 		'xxx',
 	])
-	generate_sprite('SPRITE_DIGIT_SMALL_4', 0, 0, [
+	generate_sprite('SPRITE_DIGIT_SMALL_4', 0, 0, 0xaaaaaa, [
 		'x x',
 		'x x',
 		'xxx',
 		'  x',
 		'  x',
 	])
-	generate_sprite('SPRITE_DIGIT_SMALL_5', 0, 0, [
+	generate_sprite('SPRITE_DIGIT_SMALL_5', 0, 0, 0xaaaaaa, [
 		'xxx',
 		'x  ',
 		'xxx',
 		'  x',
 		'xxx',
 	])
-	generate_sprite('SPRITE_DIGIT_SMALL_6', 0, 0, [
+	generate_sprite('SPRITE_DIGIT_SMALL_6', 0, 0, 0xaaaaaa, [
 		'xxx',
 		'x  ',
 		'xxx',
 		'x x',
 		'xxx',
 	])
-	generate_sprite('SPRITE_DIGIT_SMALL_7', 0, 0, [
+	generate_sprite('SPRITE_DIGIT_SMALL_7', 0, 0, 0xaaaaaa, [
 		'xxx',
 		'  x',
 		'  x',
 		'  x',
 		'  x',
 	])
-	generate_sprite('SPRITE_DIGIT_SMALL_8', 0, 0, [
+	generate_sprite('SPRITE_DIGIT_SMALL_8', 0, 0, 0xaaaaaa, [
 		'xxx',
 		'x x',
 		'xxx',
 		'x x',
 		'xxx',
 	])
-	generate_sprite('SPRITE_DIGIT_SMALL_9', 0, 0, [
+	generate_sprite('SPRITE_DIGIT_SMALL_9', 0, 0, 0xaaaaaa, [
 		'xxx',
 		'x x',
 		'xxx',
@@ -321,7 +328,7 @@ def generate_sprites(game_interface):
 		'xxx',
 	])
 	
-	generate_sprite_mirrored('SPRITE_WALL', 0, 0, [
+	generate_sprite_mirrored('SPRITE_WALL', 0, 0, 0xc06020, [
 		' xx',
 		' xx',
 		' xx',
@@ -333,13 +340,13 @@ def generate_sprites(game_interface):
 		'  x',
 	])
 	
-	generate_sprite_mirrored('SPRITE_SPIKE', 0, 0, [
+	generate_sprite_mirrored('SPRITE_SPIKE', 0, 0, 0xd00000, [
 		'xxx   ',
 		'xxxxxx',
 		'xxx   ',
 	])
 	
-	generate_sprite_mirrored('SPRITE_WEEDS_1', 0, 0, [
+	generate_sprite_mirrored('SPRITE_WEEDS_1', 0, 0, 0x408040, [
 		'  x',
 		'xx ',
 		'   ',
@@ -347,7 +354,7 @@ def generate_sprites(game_interface):
 		' x ',
 	])
 	
-	generate_sprite_mirrored('SPRITE_WEEDS_2', 0, 0, [
+	generate_sprite_mirrored('SPRITE_WEEDS_2', 0, 0, 0x40a040, [
 		'x  ',
 		'  x',
 		'xx ',
@@ -356,7 +363,7 @@ def generate_sprites(game_interface):
 		' x ',
 	])
 	
-	generate_sprite_mirrored('SPRITE_WEEDS_3', 0, 0, [
+	generate_sprite_mirrored('SPRITE_WEEDS_3', 0, 0, 0x40c040, [
 		'  x ',
 		'xx x',
 		'  x ',
@@ -365,7 +372,7 @@ def generate_sprites(game_interface):
 		'  x ',
 	])
 	
-	generate_sprite_mirrored('SPRITE_BRICKS_1', 0, 0, [
+	generate_sprite_mirrored('SPRITE_BRICKS_1', 0, 0, 0x804000, [
 		'    xxx      ',
 		'             ',
 		'  xxx xxx xxx',
@@ -377,7 +384,7 @@ def generate_sprites(game_interface):
 		'        xxx  ',
 	])
 		
-	generate_sprite_mirrored('SPRITE_BRICKS_2', 0, 0, [
+	generate_sprite_mirrored('SPRITE_BRICKS_2', 0, 0, 0x805000, [
 		'    xxx  ',
 		'         ',
 		'  xxx xxx',
@@ -387,7 +394,7 @@ def generate_sprites(game_interface):
 		'  xxx xxx',
 	])
 		
-	generate_sprite_mirrored('SPRITE_BRICKS_3', 0, 0, [
+	generate_sprite_mirrored('SPRITE_BRICKS_3', 0, 0, 0x803000, [
 		'  xxx    ',
 		'         ',
 		'xxx xxx  ',
@@ -1099,10 +1106,10 @@ def game_loop(key_pressed, delta_time, game_interface):
 		for bg_elem in wall_elements_right:
 			bg_elem.draw(game_interface, camera_bottom_y)
 	
-	# don't draw player if gameover, but that's the only case	
+	# don't draw player if gameover, but that's the only case
 	if current_state != STATE_GAME_OVER:
 		game_interface.drawFilledRectangle(player_rect[0] - 1, player_rect[1] - camera_bottom_y - 1, player_size[0] + 2, player_size[1] + 2, 0)
-		game_interface.drawFilledRectangle(player_rect[0],     player_rect[1] - camera_bottom_y,     player_size[0],     player_size[1],     1)
+		game_interface.drawFilledRectangle(player_rect[0],     player_rect[1] - camera_bottom_y,     player_size[0],     player_size[1],     player_color)
 	
 	looking_right = current_state in (STATE_TITLE_SCREEN, STATE_GRABBING_LEFT, STATE_JUMPING_RIGHT_ACTIVE, STATE_JUMPING_RIGHT_PASSIVE)
 	
@@ -1114,9 +1121,9 @@ def game_loop(key_pressed, delta_time, game_interface):
 			wave_offset = int(10 * (time_since_last_state_change - int(time_since_last_state_change))) % 2
 			y = player_rect[1] - 1 + player_size[1] - 1 - camera_bottom_y - wave_offset
 			if current_state in (STATE_GRABBING_LEFT, STATE_TITLE_SCREEN):
-				game_interface.setPixel(player_rect[0] + player_size[0], y, 1)
+				game_interface.setPixel(player_rect[0] + player_size[0], y, player_color)
 			elif current_state == STATE_GRABBING_RIGHT:
-				game_interface.setPixel(player_rect[0] - 1, y, 1)
+				game_interface.setPixel(player_rect[0] - 1, y, player_color)
 				
 	# EYES
 	vertical_eye_offset = 0
@@ -1135,28 +1142,28 @@ def game_loop(key_pressed, delta_time, game_interface):
 		time_since_last_blink_start = 0.0
 	blinking = time_since_last_blink_start > 0.2 or current_state not in (STATE_GRABBING_LEFT, STATE_GRABBING_RIGHT, STATE_TITLE_SCREEN)
 	if looking_right:
-		game_interface.setPixel(player_rect[0] + player_size[0] - 4,                  player_rect[1] - camera_bottom_y + player_size[1] - 2 + vertical_eye_offset, 0 if blinking else 1)
-		game_interface.setPixel(player_rect[0] + player_size[0] - 1, player_rect[1] - camera_bottom_y + player_size[1] - 2 + vertical_eye_offset, 0 if blinking else 1)
+		game_interface.setPixel(player_rect[0] + player_size[0] - 4,                  player_rect[1] - camera_bottom_y + player_size[1] - 2 + vertical_eye_offset, 0 if blinking else player_color)
+		game_interface.setPixel(player_rect[0] + player_size[0] - 1, player_rect[1] - camera_bottom_y + player_size[1] - 2 + vertical_eye_offset, 0 if blinking else player_color)
 	else:
-		game_interface.setPixel(player_rect[0],                      player_rect[1] - camera_bottom_y + player_size[1] - 2 + vertical_eye_offset, 0 if blinking else 1)
-		game_interface.setPixel(player_rect[0] + 3, player_rect[1] - camera_bottom_y + player_size[1] - 2 + vertical_eye_offset, 0 if blinking else 1)
+		game_interface.setPixel(player_rect[0],                      player_rect[1] - camera_bottom_y + player_size[1] - 2 + vertical_eye_offset, 0 if blinking else player_color)
+		game_interface.setPixel(player_rect[0] + 3, player_rect[1] - camera_bottom_y + player_size[1] - 2 + vertical_eye_offset, 0 if blinking else player_color)
 			
 	# LIMBS
 	if current_state in (STATE_JUMPING_LEFT_ACTIVE, STATE_JUMPING_LEFT_PASSIVE):
 		# moving left: limbs lower right
-		game_interface.setPixel(player_rect[0] + 1,              player_rect[1] - 1                      - camera_bottom_y, 1)
-		game_interface.setPixel(player_rect[0] + player_size[0], player_rect[1] - 1 + player_size[1] - 1 - camera_bottom_y, 1)
-		game_interface.setPixel(player_rect[0] + player_size[0], player_rect[1] - 1                      - camera_bottom_y, 1)
+		game_interface.setPixel(player_rect[0] + 1,              player_rect[1] - 1                      - camera_bottom_y, player_color)
+		game_interface.setPixel(player_rect[0] + player_size[0], player_rect[1] - 1 + player_size[1] - 1 - camera_bottom_y, player_color)
+		game_interface.setPixel(player_rect[0] + player_size[0], player_rect[1] - 1                      - camera_bottom_y, player_color)
 	if current_state in (STATE_JUMPING_RIGHT_ACTIVE, STATE_JUMPING_RIGHT_PASSIVE):
 		# moving right: limbs lower left
-		game_interface.setPixel(player_rect[0] - 1                     , player_rect[1] - 1 + player_size[1] - 1 - camera_bottom_y, 1)
-		game_interface.setPixel(player_rect[0] - 1                     , player_rect[1] - 1                      - camera_bottom_y, 1)
-		game_interface.setPixel(player_rect[0] - 1 + player_size[0] - 1, player_rect[1] - 1                      - camera_bottom_y, 1)
+		game_interface.setPixel(player_rect[0] - 1                     , player_rect[1] - 1 + player_size[1] - 1 - camera_bottom_y, player_color)
+		game_interface.setPixel(player_rect[0] - 1                     , player_rect[1] - 1                      - camera_bottom_y, player_color)
+		game_interface.setPixel(player_rect[0] - 1 + player_size[0] - 1, player_rect[1] - 1                      - camera_bottom_y, player_color)
 	
 	# floor
 	if camera_bottom_y == 0:
-		game_interface.drawLine(0, 0 - camera_bottom_y, SCREEN_WIDTH-1, 0 - camera_bottom_y, 1)
-		game_interface.drawLine(0, 1 - camera_bottom_y, SCREEN_WIDTH-1, 1 - camera_bottom_y, 1)
+		game_interface.drawLine(0, 0 - camera_bottom_y, SCREEN_WIDTH-1, 0 - camera_bottom_y, floor_color)
+		game_interface.drawLine(0, 1 - camera_bottom_y, SCREEN_WIDTH-1, 1 - camera_bottom_y, floor_color)
 	
 	# wall patterns
 	if True:
@@ -1167,11 +1174,11 @@ def game_loop(key_pressed, delta_time, game_interface):
 	# spikes, floor, and walls after character, to hide the outlines
 	if True:
 		spike_width = sprite_sizes['SPRITE_SPIKE_RIGHT'][0]
-		
+		spike_base = gfx.colorRGB(0x80, 0x40, 0x00)
 		for hazard in hazards_left:
 			if hazard[0] < camera_bottom_y + SCREEN_HEIGHT + 1:
 				hazard_height = 4 * hazard[1]
-				game_interface.drawFilledRectangle(1, hazard[0] - camera_bottom_y, 2, hazard_height + 1, 1)
+				game_interface.drawFilledRectangle(1, hazard[0] - camera_bottom_y, 2, hazard_height + 1, spike_base)
 				
 				for y in range(0, hazard[1]):
 					game_interface.drawSprite_location('SPRITE_SPIKE_LEFT', WALL_WIDTH, hazard[0] + y*4 + 1 - camera_bottom_y)
@@ -1179,11 +1186,10 @@ def game_loop(key_pressed, delta_time, game_interface):
 		for hazard in hazards_right:
 			if hazard[0] < camera_bottom_y + SCREEN_HEIGHT + 1:
 				hazard_height = 4 * hazard[1]
-				game_interface.drawFilledRectangle(SCREEN_WIDTH-3, hazard[0] - camera_bottom_y, 2, hazard_height, 1)
+				game_interface.drawFilledRectangle(SCREEN_WIDTH-3, hazard[0] - camera_bottom_y, 2, hazard_height, spike_base)
 				
 				for y in range(0, hazard[1]):
 					game_interface.drawSprite_location('SPRITE_SPIKE_RIGHT', SCREEN_WIDTH - WALL_WIDTH - spike_width, hazard[0] + y*4 + 1 - camera_bottom_y)
-	
 	
 	# random particles for boost
 	if DRAW_PARTICLES and StateIsJumping() and is_boosting:
