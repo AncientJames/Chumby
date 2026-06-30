@@ -1,12 +1,14 @@
 # Last updated 8-Jan-2023
 
 from machine import freq
-freq(250_000_000)
+
+#freq(250_000_000)
 from machine import mem32, soft_reset
 from time import ticks_ms, sleep_ms
 from os import listdir, stat
 from gc import collect as gc_collect
 import thumby
+import thumbyGraphics as gfx
 freq(48_000_000)
 
 try:
@@ -56,6 +58,7 @@ creditsScrollOffset=-1
 
 
 TCSplash=thumby.Sprite(72, 24, 'lib/TClogo.bin',0,0,-1)
+TCSplash.color=gfx.colorRGB(0x00, 0xff, 0xff)
 thumbySplash=thumby.Sprite(72, 24, 'lib/thumbyLogo.bin',0,0,-1)
 
 
@@ -68,11 +71,13 @@ gamesHeader = thumby.Sprite(32, 7, gamesBMonly,key=-1)
 
 thumby.display.setFPS(50)
 
+thumbySplash.x = (thumby.display.width-thumbySplash.width)//2
 thumbySplash.y = -37
 while thumbySplash.y < 5:
     thumbySplash.y += 2
     TCSplash.y=thumbySplash.y+37
     thumby.display.fill(0)
+    thumbySplash.color = gfx.colorHSV((ticks_ms()//32)&0xff, 0xf0, 0xf0)
     thumby.display.drawSprite(thumbySplash)
     thumby.display.drawSprite(TCSplash)
     thumby.display.update()
@@ -221,8 +226,10 @@ while True:
             if(abs(xScrollTarget-xScrollPos)>12):
                 xScrollPos -= 2
     thumby.display.fill(0)
-    thumbySplash.x=xScrollPos-xScrollPos
+    thumbySplash.x=xScrollPos-xScrollPos+(thumby.display.width-thumbySplash.width)//2
     thumbySplash.y=yScrollPos+thumbyLogoHeight
+
+    thumbySplash.color = gfx.colorHSV((ticks_ms()//32)&0xff, 0xf0, 0xf0)
     thumby.display.drawSprite(thumbySplash)
     
     color= ((ticks_ms()-startTime)//500)&1 if yScrollTarget==0 else 1

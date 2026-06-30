@@ -56,8 +56,7 @@ if(HWID>=1):
     spi = SPI(0, sck=Pin(18), mosi=Pin(19)) # Assign miso to 4 or 16?
     i2c = None
 else:
-    from machine import I2C
-    i2c = I2C(0, sda=Pin(16), scl=Pin(17), freq=1_000_000)
+    i2c = None
     spi = None
 
 

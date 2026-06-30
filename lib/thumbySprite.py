@@ -27,7 +27,7 @@ __version__ = '1.9'
 # Sprite class for holding pixel data 
 class Sprite:
     @micropython.native
-    def __init__(self, width, height, bitmapData, x = 0, y=0, key=-1, mirrorX=False, mirrorY=False):
+    def __init__(self, width, height, bitmapData, x = 0, y=0, key=-1, mirrorX=False, mirrorY=False, color=0xffffff):
         self.width = width
         self.height = height
         self.bitmapSource = bitmapData
@@ -49,6 +49,7 @@ class Sprite:
         self.key = key
         self.mirrorX = mirrorX
         self.mirrorY = mirrorY
+        self.color = color
 
     @micropython.native
     def getFrame(self):
